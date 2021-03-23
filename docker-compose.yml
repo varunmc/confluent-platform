@@ -12,26 +12,32 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   broker:
-    image: confluentinc/cp-kafka:6.1.0
-    hostname: broker
     container_name: broker
     depends_on:
-      - zookeeper
-    ports:
-      - "29092:29092"
-      - "9092:9092"
-      - "9101:9101"
+    - zookeeper
     environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092,SSL://devbox.vestigoactum.com:9093
       KAFKA_BROKER_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,SSL:SSL
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_SSL_KEY_CREDENTIALS: credentials
+      KAFKA_SSL_KEYSTORE_FILENAME: keystore
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: credentials
+    hostname: broker
+    image: confluentinc/cp-kafka:6.1.0
+    ports:
+    - "9092:9092"
+    - "9093:9093"
+    - "9101:9101"
+    - "29092:29092"
+    volumes:
+    - .:/etc/kafka/secrets
 
   schema-registry:
     image: confluentinc/cp-schema-registry:6.1.0
@@ -136,7 +142,8 @@ services:
 
   rest-proxy:
     build:
-      context: rest-proxy
+      context: .
+      dockerfile: rest-proxy.Dockerfile
     depends_on:
       - broker
       - schema-registry
@@ -149,7 +156,7 @@ services:
       KAFKA_REST_BOOTSTRAP_SERVERS: 'broker:29092'
       KAFKA_REST_LISTENERS: "https://0.0.0.0:8082"
       KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+      KAFKA_REST_SSL_KEY_PASSWORD: changeit
       KAFKA_REST_SSL_KEYSTORE_LOCATION: /home/appuser/keystore
       KAFKA_REST_SSL_KEYSTORE_PASSWORD: changeit
-      KAFKA_REST_SSL_KEY_PASSWORD: changeit
 
