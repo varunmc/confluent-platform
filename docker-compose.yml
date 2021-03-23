@@ -135,7 +135,8 @@ services:
       STREAMS_SCHEMA_REGISTRY_PORT: 8081
 
   rest-proxy:
-    image: confluentinc/cp-kafka-rest:6.1.0
+    build:
+      context: rest-proxy
     depends_on:
       - broker
       - schema-registry
@@ -146,5 +147,9 @@ services:
     environment:
       KAFKA_REST_HOST_NAME: rest-proxy
       KAFKA_REST_BOOTSTRAP_SERVERS: 'broker:29092'
-      KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
+      KAFKA_REST_LISTENERS: "https://0.0.0.0:8082"
       KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+      KAFKA_REST_SSL_KEYSTORE_LOCATION: /home/appuser/keystore
+      KAFKA_REST_SSL_KEYSTORE_PASSWORD: changeit
+      KAFKA_REST_SSL_KEY_PASSWORD: changeit
+
