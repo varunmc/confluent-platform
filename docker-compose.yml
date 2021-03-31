@@ -8,15 +8,19 @@ services:
     ports:
       - "2181:2181"
     environment:
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/jaas.conf
+      ZOOKEEPER_AUTHPROVIDER_SASL: org.apache.zookeeper.server.auth.SASLAuthenticationProvider
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+    - .:/etc/kafka/secrets
 
   broker:
     container_name: broker
     depends_on:
     - zookeeper
     environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,SSL://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,SASL_SSL://localhost:9092
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -25,6 +29,8 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/jaas.conf
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
       KAFKA_SSL_KEY_CREDENTIALS: credentials
       KAFKA_SSL_KEYSTORE_FILENAME: keystore
       KAFKA_SSL_KEYSTORE_CREDENTIALS: credentials
